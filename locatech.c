@@ -16,13 +16,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <locale.h>
+#include <string.h>
 
 // Variáveis Globais de Apoio
 int op, i, e, encontrou;
 // Variáveis de Parametro
 float porcentagemMultaAtraso;
 // Variáveis Globais do Carro
-int numCarros;
 int carros[10];
 int nCarros;
 int status[10];
@@ -30,18 +30,29 @@ int clienteCarro[10];
 int diasReserva[10];
 int diasEfetivo[10];
 float valorDiaria[10];
+char placaCarro[10][256];
+char marcaCarro[10][256];
+char modeloCarro[10][256];
 // Variáveis Globais do Cliente
 int clientes[10];
 int nCliente;
 int idadeClientes[10];
 char nomeCliente[10][256];
 
+
+/**
+ * Main
+ */
 int main()
 {
 	bootstrap();
+	mock();
     menu();
 }
 
+/**
+ * Bootstrap do sistema, carrega todas as variaveis iniciais
+ */
 void bootstrap()
 {
 	setlocale(LC_ALL, "Portuguese"); // Permite o Output de caracteres especiais
@@ -78,12 +89,14 @@ float calculaPrecoLocacao(int dReserva, int dEfetivo, float valorVeiculo)
 	}
 	valorTotal = (float) valorVeiculo * dReserva;
 	if (diasExcedente > 0) {
-		valorTotal += (float) (valorVeiculo * diasExcedente) * (1.1);
+		valorTotal += (float) (valorVeiculo * diasExcedente) * ((porcentagemMultaAtraso / 100) + 1);
 	}
 	return (float) valorTotal;
 }
 
-
+/**
+ * Aluga um determinado carro no sistema
+ */
 void alugarCarro()
 {
 	float valorTotal;
@@ -115,6 +128,9 @@ void alugarCarro()
 	}
 }
 
+/**
+ * Libera um determinado carro alugado no sistema
+ */
 void liberarCarro()
 {
 	int e, idadeCliente, diasReais;
@@ -154,13 +170,16 @@ void liberarCarro()
     }
 }
 
+/**
+ * Lista todos os carros alugados no sistema
+ */
 void listarCarrosOcupados()
 {
     echo("Carros Ocupados\n");
     encontrou = 0;
     for (e = 0; e < 10; e++) {
         if (status[e] == 1) {
-            printf("[ %d ] - Alugado - Valor: R$%f\n", carros[e], valorDiaria[e]);
+            printf("[ %d ] - %s - %s - %s - Alugado - Valor: R$%f\n", carros[e], placaCarro[e], marcaCarro[e], modeloCarro[e], valorDiaria[e]);
             encontrou = 1;
         }
     }
@@ -169,13 +188,16 @@ void listarCarrosOcupados()
     }
 }
 
+/**
+ * Lista todos os carros livres no Sistema
+ */
 void listarCarrosLivres()
 {
 	echo("Carros Disponiveis\n");
 	encontrou = 0;
 	for (e = 0; e < 10; e++)  {
 	    if (status[e] == 0) {
-	        printf("[ %d ] - Disponivel - Valor: R$%f\n", carros[e], valorDiaria[e]);
+	        printf("[ %d ] - %s - %s - %s - Disponivel - Valor: R$%f\n", carros[e], placaCarro[e], marcaCarro[e], modeloCarro[e], valorDiaria[e]);
 	        encontrou = 1;
 	    }
 	}
@@ -184,19 +206,25 @@ void listarCarrosLivres()
 	}
 }
 
+/**
+ * Lista todos os carros cadastrados no Sistema
+ */
 void listarCarros()
 {
     echo("Listagem de Carros\n");
     for (e = 0; e < 10; e++) {
         if (status[e] == 1)  {
-            printf("[ %d ] - Alugado - Valor: R$%f\n", carros[e], valorDiaria[e]);
+            printf("[ %d ] - %s - %s - %s - Alugado - Valor: R$%f\n", carros[e], placaCarro[e], marcaCarro[e], modeloCarro[e], valorDiaria[e]);
         }
         else {
-            printf("[ %d ] - Disponivel - Valor: R$%f\n", carros[e], valorDiaria[e]);
+            printf("[ %d ] - %s - %s - %s - Disponivel - Valor: R$%f\n", carros[e], placaCarro[e], marcaCarro[e], modeloCarro[e], valorDiaria[e]);
         }
     }
 }
 
+/**
+ * Cadastra um novo cliente no sistema
+ */
 void cadastrarCliente()
 {
 	echo("Cadastrar novo Cliente\n");
@@ -209,9 +237,10 @@ void cadastrarCliente()
 			printf("Você está cadastrando o cliente de id [%d]\n", i+1);
 			
 			printf("Nome do Cliente: ");
-			scanf("%s" , nome);
+			scanf(" %[^\n]",nomeCliente[i]);
+			//scanf("%s" , nome);
 			
-			nomeCliente[i][0] = nome;
+			//nomeCliente[i] = nome;
 			
 			while (idade <= 0) {
 				printf("Informe a idade do Cliente: ");
@@ -228,6 +257,9 @@ void cadastrarCliente()
 	}
 }
 
+/**
+ * Lista todos os clientes na tela
+ */
 void listarClientes()
 {
 	echo("Listagem de Clientes\n");
@@ -245,6 +277,9 @@ void listarClientes()
 	}
 }
 
+/**
+ * Gera um relatório geral do Sistema
+ */
 void relatorioAlugueis()
 {
 	echo("Relatório geral de Aluguéis");
@@ -260,6 +295,9 @@ void relatorioAlugueis()
 	}
 }
 
+/**
+ * Metodo para controlar a porcentagem da multa por dias de atraso na devolução do veículo
+ */
 void porcentagemMulta()
 {
 	char opcao;
@@ -281,7 +319,10 @@ void porcentagemMulta()
 	}
 }
 
-void controleValores()
+/**
+ * Metodo para gerenciamento de veículos (Edição das informações)
+ */
+void controleVeiculos()
 {
 	int opcao;
 	encontrou = 0;
@@ -294,7 +335,8 @@ void controleValores()
 		for (i = 0; i < 10; i++) {
 			if (opcao == carros[i]) {
 				encontrou = 1;
-				printf("\n\nValor atual do carro selecionado é de R$%f.\nQual o novo valor desejado? ", valorDiaria[i]);
+				inputDadosCarro(i);
+				printf("\nValor atual do carro selecionado é de R$%f.\nQual o novo valor desejado? ", valorDiaria[i]);
 				do {
 					scanf("%f", &valorDiaria[i]);
 					
@@ -311,6 +353,25 @@ void controleValores()
 	}
 }
 
+/**
+ * Armazena as informações de texto referentes a um veiculo
+ * @param int indice
+ */
+void inputDadosCarro(int indice)
+{
+	printf("\n\nInforme a Marca do Carro: ");
+	scanf(" %[^\n]",marcaCarro[indice]);
+	
+	printf("\n\nInforme o Modelo do Carro: ");
+	scanf(" %[^\n]",modeloCarro[indice]);
+	
+	printf("\n\nInforme a Placa do Carro: ");
+	scanf(" %[^\n]",placaCarro[indice]);
+}
+
+/**
+ * Monta o menu principal do sistema
+ */
 void menu()
 {
 	op = 1;
@@ -329,7 +390,7 @@ void menu()
 		printf("            ¦  7 ¦ Listar Clientes             ¦\n");
 		printf("            ¦  8 ¦ Relatório de Aluguéis       ¦\n");
 		printf("            ¦  9 ¦ Porcentagem Multa Atraso    ¦\n");
-		printf("            ¦ 10 ¦ Valores                     ¦\n");
+		printf("            ¦ 10 ¦ Informações de Veiculos     ¦\n");
 		printf("            ¦  0 ¦ SAIR                        ¦\n");
 		printf("            +----------------------------------+\n");
 		printf("\n\n  Opção: ");
@@ -365,7 +426,7 @@ void menu()
 	        	porcentagemMulta();
 	        	break;
 	        case 10:
-	        	controleValores();
+	        	controleVeiculos();
 	        	break;
 	        case 0:
 	        	exit(0);
@@ -377,6 +438,9 @@ void menu()
     }
 }
 
+/**
+ * Apresenta o logotipo do Sistema
+ */
 void bemVindo()
 {
 	printf("    __                                 ________                    __        \n");
@@ -391,18 +455,90 @@ void bemVindo()
 	printf("\n\n");
 }
 
+/**
+ * Metodo final para o loop do Menu
+ */
 void fim()
 {
 	printf("\nPrecione qualquer tecla para voltar ao Menu\n");
 	getch();
 }
 
+/**
+ * Faz um printf com quebra de linha n ofinal
+ */
 void echo(char mensagem[])
 {
 	printf("%s\n", mensagem);
 }
 
+/**
+ * Limpa a tela do Console
+ */
 void limpaTela()
 {
 	system("cls");
+}
+
+/**
+ * Função responsavel por fazer o mock de dados inicial do sistema.
+ * Caso deseje que não seje feito nenhum input de informações automatico, basta comentar essa função na main()
+ */
+void mock()
+{
+	char marcas[4][256];
+	
+	strcpy(marcas[0], "Chevrolet");
+	strcpy(marcas[1], "Volkswagen");
+	strcpy(marcas[2], "Fiat");
+	strcpy(marcas[3], "Ford");
+	
+	strcpy(placaCarro[0], "AEU5856");
+	strcpy(marcaCarro[0], marcas[1]);
+	strcpy(modeloCarro[0], "Gol");
+	
+	strcpy(placaCarro[1], "EUD9055");
+	strcpy(marcaCarro[1], marcas[0]);
+	strcpy(modeloCarro[1], "Onix");
+	
+	strcpy(placaCarro[2], "BCA4321");
+	strcpy(marcaCarro[2], marcas[2]);
+	strcpy(modeloCarro[2], "Palio");
+	
+	strcpy(placaCarro[3], "LKI9584");
+	strcpy(marcaCarro[3], marcas[0]);
+	strcpy(modeloCarro[3], "Cobalt");
+	
+	strcpy(placaCarro[4], "KLI4242");
+	strcpy(marcaCarro[4], marcas[1]);
+	strcpy(modeloCarro[4], "Up");
+	
+	strcpy(placaCarro[5], "OIU2511");
+	strcpy(marcaCarro[5], marcas[3]);
+	strcpy(modeloCarro[5], "New Fiesta");
+	
+	strcpy(placaCarro[6], "EFG2541");
+	strcpy(marcaCarro[6], marcas[0]);
+	strcpy(modeloCarro[6], "Cruzer");
+	
+	strcpy(placaCarro[7], "LKJ1233");
+	strcpy(marcaCarro[7], marcas[3]);
+	strcpy(modeloCarro[7], "Fusion");
+	
+	strcpy(placaCarro[8], "EFF9999");
+	strcpy(marcaCarro[8], marcas[0]);
+	strcpy(modeloCarro[8], "Impala");
+	
+	strcpy(placaCarro[9], "ABC1234");
+	strcpy(marcaCarro[9], marcas[3]);
+	strcpy(modeloCarro[9], "Mustang V8");
+	
+	idadeClientes[0] = 25;
+	strcpy(nomeCliente[0], "Ricardo Dias");
+	
+	idadeClientes[1] = 21;
+	strcpy(nomeCliente[1], "Aline Alves");
+	
+	idadeClientes[2] = 75;
+	strcpy(nomeCliente[2], "Jose Algusto dos Santos");
 }
